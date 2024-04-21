@@ -1,12 +1,22 @@
 import sqlite3
+import requests
 from datetime import datetime
+import json
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env
+load_dotenv()
+
+# VirusTotal API key
+API_KEY = os.getenv('API_KEY')
 
 # Path to the Firefox profile directory containing places.sqlite
-firefox_profile_path = 'C:\\Users\\User\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\uqrlemz1.default-release'
+firefox_profile_path = 'C:\\Users\\ARYAN KUMAR\\AppData\\Roaming\\Mozilla\\Firefox\\Profiles\\q72qvwky.default-release-1713718247832'
 
 # Connect to the Firefox places.sqlite database
 try:
-    conn = sqlite3.connect(f'{firefox_profile_path}/places.sqlite')
+    conn = sqlite3.connect(f'{firefox_profile_path}\\places.sqlite')
     cursor = conn.cursor()
 
     # SQL query to retrieve URL visit information
@@ -23,7 +33,7 @@ try:
     # Fetch all rows from the result set
     rows = cursor.fetchall()
 
-    # Print the URLs and visit dates
+    # Print the URLs, visit dates, and check for maliciousness using VirusTotal API
     for row in rows:
         url = row[0]
         title = row[1]
@@ -31,6 +41,25 @@ try:
         print(f"Title: {title}")
         print(f"URL: {url}")
         print(f"Visit Date: {visit_date}")
+        
+        # VirusTotal API request
+        params = {'apikey': API_KEY, 'resource': url}
+        response = requests.get('https://www.virustotal.com/vtapi/v2/url/report', params=params)
+        
+        try:
+            result = response.json()
+            if result['response_code'] == 1:
+                if result['positives'] > 0:
+                    print("This URL is malicious!")
+                else:
+                    print("This URL is not malicious.")
+            else:
+                print("Scan result not available.")
+        except json.JSONDecodeError:
+            print(f"Error decoding JSON response for URL: {url}")
+        except KeyError:
+            print(f"Error: Unexpected response from VirusTotal API for URL: {url}")
+            
         print("-" * 50)
 
     # Close the database connection
