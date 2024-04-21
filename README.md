@@ -47,5 +47,3 @@ python test.py
 The script will check your browser history for any visits to malicious websites using the VirusTotal API.
 
 Enjoy secure browsing!
-
-This project is licensed under the MIT License.
